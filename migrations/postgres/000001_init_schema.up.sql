@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS deliveries (
 );
 
 CREATE TABLE IF NOT EXISTS payments (
-    id UUID PRIMARY KEY,
+    transaction UUID PRIMARY KEY,
     request_id VARCHAR(128),
     currency VARCHAR(32) NOT NULL,
     provider VARCHAR(128) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS items (
 
 
 CREATE TABLE IF NOT EXISTS orders (
-    id UUID PRIMARY KEY,
+    order_uid UUID PRIMARY KEY,
     track_number VARCHAR(255),
     entry VARCHAR(32) NOT NULL,
     delivery_id UUID NOT NULL,
