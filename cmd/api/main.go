@@ -12,6 +12,7 @@ import (
 	"wbts/internal/service"
 	"wbts/internal/storage"
 	"wbts/internal/transport/kafka"
+	"wbts/internal/transport/rest"
 )
 
 func main() {
@@ -26,12 +27,18 @@ func main() {
 		[]string{os.Getenv("KAFKA_BROKER")},
 		os.Getenv("KAFKA_ORDERS_TOPIC"),
 		os.Getenv("KAFKA_GROUP_ID"),
-		context.Background(),
 		orderService,
 		validator,
 	)
-	c.Run(context.Background())
+	go c.Run(context.Background())
 
-	log.Println("Server started")
-	http.ListenAndServe(":8081", nil)
+	orderHandler := rest.NewOrderHandler(orderService)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/order/{order_uid}", orderHandler.GetOrderHandler)
+
+	log.Println("Started server on 8081 port")
+	if err := http.ListenAndServe(":8081", mux); err != nil {
+		log.Fatalf("Error starting the server: %v", err)
+	}
 }

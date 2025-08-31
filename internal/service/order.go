@@ -18,13 +18,27 @@ func NewOrderService(orderRepo *storage.OrderRepo, orderConverter *pkg.OrderConv
 	return &OrderService {orderRepo, orderConverter}
 }
 
-func (s *OrderService) Save(ctx context.Context, order dto.OrderDTO) {
+func (s *OrderService) Save(order dto.OrderDTO) {
 	orderInfo, err := s.orderConverter.OrderDTOToOrderInfo(order)
 	if err != nil {
 		log.Printf("Error converting order DTO to Entity: %v", err)
 	}
 
-	if err := s.orderRepo.Upsert(ctx, orderInfo); err != nil {
+	if err := s.orderRepo.Upsert(context.Background(), orderInfo); err != nil {
 		log.Printf("Error saving to DB: %v", err)
 	}
+}
+
+func (s *OrderService) Get(order_uid string) (dto.OrderDTO, error) {
+	orderInfo, err := s.orderRepo.GetByUID(context.Background(), order_uid)
+	if err != nil {
+		return dto.OrderDTO{}, err
+	}
+
+	orderDTO, err := s.orderConverter.OrderInfoToOrderDTO(*orderInfo)
+	if err != nil {
+		return dto.OrderDTO{}, err
+	}
+
+	return orderDTO, nil
 }

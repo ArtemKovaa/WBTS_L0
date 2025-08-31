@@ -16,16 +16,12 @@ type Consumer struct {
 	brokers []string
     topic string
 	groupID string
-	ctx context.Context
 	orderService *service.OrderService
 	validator *validator.Validate
 }
 
-func NewConsumer(
-	brokers []string, topic string, groupID string, ctx context.Context, 
-	orderService *service.OrderService, validator *validator.Validate,
-	) *Consumer {
-    return &Consumer{brokers, topic, groupID, ctx, orderService, validator}
+func NewConsumer(brokers []string, topic string, groupID string, orderService *service.OrderService, validator *validator.Validate) *Consumer {
+    return &Consumer{brokers, topic, groupID, orderService, validator}
 }
 
 func (c *Consumer) Setup(session sarama.ConsumerGroupSession) error {
@@ -63,7 +59,7 @@ func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 				)
         	}
 		} else {
-			c.orderService.Save(c.ctx, order)
+			c.orderService.Save(order)
 		}
 
         session.MarkMessage(msg, "")

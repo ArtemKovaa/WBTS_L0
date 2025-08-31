@@ -40,3 +40,9 @@ CREATE TABLE IF NOT EXISTS orders (
     date_created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     oof_shard VARCHAR(32) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS orders_items (
+    order_uid VARCHAR(128),
+    chrt_id BIGINT,
+    PRIMARY KEY (order_uid, chrt_id)
+);
