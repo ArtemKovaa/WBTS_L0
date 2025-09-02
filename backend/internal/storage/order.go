@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"sync"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,13 +17,23 @@ import (
 type OrderRepo struct {
 	pgPool *pgxpool.Pool
 	cache  map[string]entity.OrderInfo
+	mtx sync.RWMutex
 }
 
 func NewOrderRepo(pgPool *pgxpool.Pool) *OrderRepo {
-	return &OrderRepo{pgPool, make(map[string]entity.OrderInfo)}
+	return &OrderRepo{pgPool, make(map[string]entity.OrderInfo), sync.RWMutex{}}
 }
 
 func (r *OrderRepo) GetByUID(ctx context.Context, order_uid string) (*entity.OrderInfo, error) {
+	r.mtx.RLock()
+	v, ok := r.cache[order_uid]
+	r.mtx.RUnlock()
+	if ok {
+		log.Printf("Cache hit for order with uid=%s", order_uid)
+		return &v, nil
+	}
+	log.Printf("Order with uid=%s was not found in cache", order_uid)
+
 	order, err := r.getOrderByUID(ctx, order_uid)
 	if err != nil {
 		return nil, err
@@ -37,7 +49,13 @@ func (r *OrderRepo) GetByUID(ctx context.Context, order_uid string) (*entity.Ord
 		return nil, err
 	}
 
-	return &entity.OrderInfo{order, payment, items}, nil
+	orderInfo := entity.OrderInfo{Order: order, Payment: payment, Items: items}
+	
+	r.mtx.Lock()
+	r.cache[order_uid] = orderInfo
+	r.mtx.Unlock()
+
+	return &orderInfo, nil
 }
 
 func (r *OrderRepo) Upsert(ctx context.Context, orderInfo entity.OrderInfo) error {

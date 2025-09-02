@@ -95,7 +95,7 @@ def main():
     while True:
         producer.send('orders', value=generate_message())
         producer.flush()
-        time.sleep(3)
+        time.sleep(1)
 
 
 if __name__ == '__main__':
