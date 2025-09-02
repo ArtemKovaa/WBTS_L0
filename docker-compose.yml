@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:17
+    container_name: postgres
     environment:
       POSTGRES_PASSWORD: password
     ports:
@@ -43,6 +44,7 @@ services:
 
   migrate:
     image: migrate/migrate
+    container_name: migrate
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,9 +56,9 @@ services:
     volumes:
       - ./migrations/postgres:/migrations
 
-  app:
-    build:
-      context: .
+  backend:
+    build: ./backend
+    container_name: backend
     depends_on:
       - migrate
       - kafka
@@ -67,6 +69,13 @@ services:
       KAFKA_GROUP_ID: "WBTS"
     ports:
       - "8081:8081"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:
