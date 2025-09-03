@@ -1,31 +1,34 @@
 package rest
 
 import (
-	"net/http"
 	"encoding/json"
+	"net/http"
 
-	"wbts/internal/service"
+	"wbts/internal/domain/dto"
 )
 
-type OrderHandler struct {
-	orderService *service.OrderService
+type OrderService interface {
+	Get(order_uid string) (dto.OrderDTO, error)
 }
 
-func NewOrderHandler(orderService *service.OrderService) *OrderHandler {
+type OrderHandler struct {
+	orderService OrderService
+}
+
+func NewOrderHandler(orderService OrderService) *OrderHandler {
 	return &OrderHandler{orderService}
 }
-
 
 func (h *OrderHandler) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
-    order_uid := r.PathValue("order_uid")
+	order_uid := r.PathValue("order_uid")
 
 	order, err := h.orderService.Get(order_uid)
 	if err != nil {
-		http.Error(w, "Error getting order by uid: " + err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error getting order by uid: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -40,4 +43,3 @@ func (h *OrderHandler) GetOrderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-

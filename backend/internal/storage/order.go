@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,14 +26,14 @@ func NewOrderRepo(pgPool *pgxpool.Pool) *OrderRepo {
 }
 
 func (r *OrderRepo) GetByUID(ctx context.Context, order_uid string) (*entity.OrderInfo, error) {
+	startTime := time.Now()
 	r.mtx.RLock()
 	v, ok := r.cache[order_uid]
 	r.mtx.RUnlock()
 	if ok {
-		log.Printf("Cache hit for order with uid=%s", order_uid)
+		log.Printf("Cache hit for order with uid=%s. Fetching time: %s", order_uid, time.Since(startTime))
 		return &v, nil
 	}
-	log.Printf("Order with uid=%s was not found in cache", order_uid)
 
 	order, err := r.getOrderByUID(ctx, order_uid)
 	if err != nil {
@@ -55,6 +56,7 @@ func (r *OrderRepo) GetByUID(ctx context.Context, order_uid string) (*entity.Ord
 	r.cache[order_uid] = orderInfo
 	r.mtx.Unlock()
 
+	log.Printf("Order with uid=%s was not found in cache. Fetching time: %s", order_uid, time.Since(startTime))
 	return &orderInfo, nil
 }
 

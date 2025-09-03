@@ -8,19 +8,22 @@ import (
     "github.com/IBM/sarama"
 	"github.com/go-playground/validator/v10"
 
-	"wbts/internal/service"
 	"wbts/internal/domain/dto"
 )
+
+type OrderService interface {
+    Save(order dto.OrderDTO)
+}
 
 type Consumer struct {
 	brokers []string
     topic string
 	groupID string
-	orderService *service.OrderService
+	orderService OrderService
 	validator *validator.Validate
 }
 
-func NewConsumer(brokers []string, topic string, groupID string, orderService *service.OrderService, validator *validator.Validate) *Consumer {
+func NewConsumer(brokers []string, topic string, groupID string, orderService OrderService, validator *validator.Validate) *Consumer {
     return &Consumer{brokers, topic, groupID, orderService, validator}
 }
 

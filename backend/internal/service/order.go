@@ -4,17 +4,26 @@ import (
 	"log"
 	"context"
 
-	"wbts/internal/storage"
 	"wbts/internal/domain/dto"
-	"wbts/internal/pkg"
+	"wbts/internal/domain/entity"
 )
 
-type OrderService struct {
-	orderRepo *storage.OrderRepo
-	orderConverter *pkg.OrderConverter
+type OrderRepo interface {
+	GetByUID(ctx context.Context, order_uid string) (*entity.OrderInfo, error) 
+	Upsert(ctx context.Context, orderInfo entity.OrderInfo) error
 }
 
-func NewOrderService(orderRepo *storage.OrderRepo, orderConverter *pkg.OrderConverter) *OrderService {
+type OrderConverter interface {
+	OrderDTOToOrderInfo(dto dto.OrderDTO) (entity.OrderInfo, error)
+	OrderInfoToOrderDTO(info entity.OrderInfo) (dto.OrderDTO, error)
+}
+
+type OrderService struct {
+	orderRepo OrderRepo
+	orderConverter OrderConverter
+}
+
+func NewOrderService(orderRepo OrderRepo, orderConverter OrderConverter) *OrderService {
 	return &OrderService {orderRepo, orderConverter}
 }
 
